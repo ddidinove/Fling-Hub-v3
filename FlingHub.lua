@@ -1,102 +1,244 @@
--- Hub Fling estilizado by Copilot Chat
-local p=game.Players.LocalPlayer
-local g=Instance.new("ScreenGui",p.PlayerGui) g.Name="FlingHub"
-g.ResetOnSpawn=false
--- Blur effect
-local blur=Instance.new("BlurEffect",game.Lighting)
-blur.Size=0
--- Main button
-local b=Instance.new("TextButton",g)
-b.Size=UDim2.new(0,60,0,26) b.Position=UDim2.new(0,16,0.5,-13)
-b.Text="FLING" b.BackgroundColor3=Color3.fromRGB(40,42,67)
-b.TextColor3=Color3.fromRGB(255,195,80) b.Font=Enum.Font.GothamBold b.TextSize=18
-Instance.new("UICorner",b).CornerRadius=UDim.new(0,12)
--- Main frame
-local f=Instance.new("Frame",g) f.Size=b.Size f.Position=b.Position
-f.BackgroundColor3=Color3.fromRGB(29,29,39) f.Visible=false f.ClipsDescendants=true
-Instance.new("UICorner",f).CornerRadius=UDim.new(0,16)
--- Close button
-local c=Instance.new("TextButton",f) c.Text="⨉" c.Size=UDim2.new(0,26,0,26)
-c.Position=UDim2.new(1,-32,0,6) c.BackgroundColor3=Color3.fromRGB(58,58,90)
-c.TextColor3=Color3.fromRGB(250,80,80) c.Font=Enum.Font.GothamBold c.TextSize=16
-Instance.new("UICorner",c).CornerRadius=UDim.new(0,9) c.Visible=false
+-- Didi Hub fling v3 - Hub complexo e bonito
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Tela principal
+local hubGui = Instance.new("ScreenGui")
+hubGui.Name = "DidiHubMain"
+hubGui.IgnoreGuiInset = true
+hubGui.ResetOnSpawn = false
+hubGui.Parent = PlayerGui
+
+-- Fundo escuro com blur
+local blur = Instance.new("Frame")
+blur.Size = UDim2.new(1,0,1,0)
+blur.BackgroundColor3 = Color3.fromRGB(18,24,38)
+blur.BackgroundTransparency = 0.3
+blur.Parent = hubGui
+
+-- Container central (janela principal)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 460230, 0.5, -175)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30,40,60)
+mainFrame.BackgroundTransparency = 0.08
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+mainFrame.Parent = hubGui
+
+-- Sombra
+local shadow = Instance.new("ImageLabel")
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://1316045217"
+shadow.Size = UDim2.new(1, 60, 1, 60)
+shadow.Position = UDim2.new(-0.07, 0, -0.11, 0)
+shadow.ImageTransparency = 0.7
+shadow.ZIndex = 0
+shadow.Parent = mainFrame
+
 -- Título
-local t=Instance.new("TextLabel",f) t.Text="FLING HUB" t.Size=UDim2.new(1,0,0,32)
-t.Position=UDim2.new(0,0,0,4) t.BackgroundTransparency=1 t.TextColor3=Color3.fromRGB(255,220,120)
-t.TextSize=18 t.Font=Enum.Font.GothamBold t.Visible=false
--- Scroll jogadores
-local sc=Instance.new("ScrollingFrame",f)
-sc.Size=UDim2.new(1,-18,1,-48) sc.Position=UDim2.new(0,9,0,40)
-sc.BackgroundTransparency=1 sc.ScrollBarThickness=5 sc.Visible=false
-local ul=Instance.new("UIListLayout",sc) ul.Padding=UDim.new(0,4) ul.HorizontalAlignment=Enum.HorizontalAlignment.Center
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 50)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌟 Didi Hub Fling v3 🌟"
+title.Font = Enum.Font.GothamBlack
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.TextStrokeTransparency = 0.6
+title.TextScaled = true
+title.Parent = mainFrame
 
--- Animação de blur
-local function blurto(val,time)
-    if not blur or not blur.Parent then return end
-    local st=blur.Size local startTick=os.clock()
-    while os.clock()-startTick<time do
-        blur.Size=st+(val-st)*((os.clock()-startTick)/time)
-        task.wait()
-    end
-    blur.Size=val
+-- Abas (Tabs)
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1,0,0,38)
+tabFrame.Position = UDim2.new(0,0,0,50)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = mainFrame
+
+local tabs = {}
+local tabNames = {"Fling", "Logs", "Config", "Sobre"}
+local selectedTab = 1
+
+for i,tabName in ipairs(tabNames) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 100, 0, 28)
+    btn.Position = UDim2.new(0, 18 + (i-1)*110, 0, 5)
+    btn.BackgroundColor3 = i == 1 and Color3.fromRGB(0,200,255) or Color3.fromRGB(30,40,60)
+    btn.TextColor3 = i == 1 and Color3.fromRGB(255,255,255) or Color3.fromRGB(160,170,188)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Text = tabName
+    btn.TextScaled = true
+    btn.AutoButtonColor = false
+    btn.Parent = tabFrame
+    btn.ZIndex = 2
+    tabs[i] = btn
 end
 
--- Animação abrir
-local TweenService=game:GetService("TweenService")
-b.MouseButton1Click:Connect(function()
-    b.Visible=false
-    f.Size=b.Size f.Position=b.Position f.Visible=true t.Visible=false c.Visible=false sc.Visible=false
-    TweenService:Create(f,TweenInfo.new(0.22,Enum.EasingStyle.Back),{Size=UDim2.new(0,250,0,350),Position=UDim2.new(0.5,-125,0.5,-175)}):Play()
-    task.spawn(function() blurto(15,0.25) end)
-    task.wait(0.23) t.Visible=true c.Visible=true sc.Visible=true
-end)
--- Fechar
-c.MouseButton1Click:Connect(function()
-    t.Visible=false c.Visible=false sc.Visible=false
-    TweenService:Create(f,TweenInfo.new(0.17,Enum.EasingStyle.Back),{Size=UDim2.new(0,60,0,26),Position=UDim2.new(0,16,0.5,-13)}):Play()
-    task.spawn(function() blurto(0,0.2) end)
-    task.wait(0.15) f.Visible=false b.Visible=true
-end)
+-- Conteúdo das abas
+local pages = {}
 
--- Atualiza lista
-local function ref()
-    for _,v in pairs(sc:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
-    local n=0
-    for _,p2 in ipairs(game.Players:GetPlayers()) do
-        if p2~=p then n=n+1
-            local pf=Instance.new("Frame",sc) pf.Size=UDim2.new(1,-8,0,42)
-            pf.BackgroundColor3=Color3.fromRGB(44,52,82) Instance.new("UICorner",pf).CornerRadius=UDim.new(0,8)
-            local thumb=Instance.new("ImageLabel",pf)
-            thumb.Size=UDim2.new(0,30,0,30) thumb.Position=UDim2.new(0,6,0,6)
-            thumb.Image="https://www.roblox.com/headshot-thumbnail/image?userId="..p2.UserId.."&width=420&height=420&format=png"
-            thumb.BackgroundTransparency=1
-            local nm=Instance.new("TextLabel",pf) nm.Text=p2.DisplayName
-            nm.Size=UDim2.new(1,-74,0,22) nm.Position=UDim2.new(0,40,0,9)
-            nm.BackgroundTransparency=1 nm.TextColor3=Color3.fromRGB(230,230,230)
-            nm.Font=Enum.Font.Gotham nm.TextSize=14 nm.TextXAlignment=Enum.TextXAlignment.Left
-            local fl=Instance.new("TextButton",pf) fl.Text="FLING"
-            fl.Size=UDim2.new(0,52,0,22) fl.Position=UDim2.new(1,-58,0.5,-11)
-            fl.AnchorPoint=Vector2.new(0,0.5)
-            fl.BackgroundColor3=Color3.fromRGB(110,160,255) fl.TextColor3=Color3.fromRGB(255,255,255)
-            fl.Font=Enum.Font.GothamBold fl.TextSize=13 Instance.new("UICorner",fl).CornerRadius=UDim.new(0,8)
-            fl.MouseButton1Click:Connect(function()
-                local ch,me=p2.Character,p.Character
-                if not ch or not me then return end
-                local hrp,chp=ch:FindFirstChild("HumanoidRootPart"),me:FindFirstChild("HumanoidRootPart")
-                if not hrp or not chp then return end
-                -- Teleporta até o alvo
-                chp.CFrame=hrp.CFrame*CFrame.new(0,0,2) wait(0.09)
-                -- Fling
-                local bv=Instance.new("BodyAngularVelocity",hrp)
-                bv.AngularVelocity=Vector3.new(1e5,1e5,1e5)
-                bv.MaxTorque=Vector3.new(1e9,1e9,1e9)
-                wait(0.95) bv:Destroy()
-            end)
-        end
-    end
-    sc.CanvasSize=UDim2.new(0,0,0,math.max(n*46,1))
+-- Página 1: Fling
+do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, -32, 1, -105)
+    page.Position = UDim2.new(0, 16, 0, 88)
+    page.BackgroundTransparency = 1
+    page.Parent = mainFrame
+
+    -- Botão de Fling
+    local flingBtn = Instance.new("TextButton")
+    flingBtn.Size = UDim2.new(0,200,0,45)
+    flingBtn.Position = UDim2.new(0.5,-100,0,20)
+    flingBtn.BackgroundColor3 = Color3.fromRGB(0,200,255)
+    flingBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    flingBtn.Font = Enum.Font.GothamBold
+    flingBtn.TextScaled = true
+    flingBtn.Text = "Ativar Fling"
+    flingBtn.AutoButtonColor = true
+    flingBtn.Parent = page
+
+    -- Animação hover
+    flingBtn.MouseEnter:Connect(function()
+        TweenService:Create(flingBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 220)}):Play()
+    end)
+    flingBtn.MouseLeave:Connect(function()
+        TweenService:Create(flingBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 200, 255)}):Play()
+    end)
+
+    -- Exemplo ação
+    flingBtn.MouseButton1Click:Connect(function()
+        flingBtn.Text = "Fling Ativado!"
+        TweenService:Create(flingBtn, TweenInfo.new(0.4), {BackgroundColor3 = Color3.fromRGB(0, 255, 127)}):Play()
+    end)
+
+    pages[1] = page
 end
-ref() game.Players.PlayerAdded:Connect(ref) game.Players.PlayerRemoving:Connect(ref)
 
--- Remove blur ao fechar o jogo
-game:BindToClose(function() if blur and blur.Parent then blur:Destroy() end end)
+-- Página 2: Logs
+do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, -32, 1, -105)
+    page.Position = UDim2.new(0, 16, 0, 88)
+    page.BackgroundTransparency = 1
+    page.Parent = mainFrame
+
+    local logBox = Instance.new("TextBox")
+    logBox.Size = UDim2.new(1, 0, 1, 0)
+    logBox.Position = UDim2.new(0,0,0,0)
+    logBox.BackgroundColor3 = Color3.fromRGB(25,32,48)
+    logBox.TextColor3 = Color3.fromRGB(0,200,255)
+    logBox.TextXAlignment = Enum.TextXAlignment.Left
+    logBox.TextYAlignment = Enum.TextYAlignment.Top
+    logBox.ClearTextOnFocus = false
+    logBox.Font = Enum.Font.Code
+    logBox.TextSize = 18
+    logBox.Text = "Logs do Hub aparecerão aqui."
+    logBox.MultiLine = true
+    logBox.TextWrapped = true
+    logBox.Parent = page
+
+    pages[2] = page
+end
+
+-- Página 3: Config
+do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, -32, 1, -105)
+    page.Position = UDim2.new(0, 16, 0, 88)
+    page.BackgroundTransparency = 1
+    page.Parent = mainFrame
+
+    -- Exemplo: Slider de Blur
+    local blurLabel = Instance.new("TextLabel")
+    blurLabel.Size = UDim2.new(0,120,0,28)
+    blurLabel.Position = UDim2.new(0,10,0,20)
+    blurLabel.BackgroundTransparency = 1
+    blurLabel.Text = "Blur:"
+    blurLabel.TextColor3 = Color3.fromRGB(160,170,188)
+    blurLabel.Font = Enum.Font.Gotham
+    blurLabel.TextScaled = true
+    blurLabel.Parent = page
+
+    local blurSlider = Instance.new("TextButton")
+    blurSlider.Size = UDim2.new(0,200,0,28)
+    blurSlider.Position = UDim2.new(0,140,0,20)
+    blurSlider.BackgroundColor3 = Color3.fromRGB(40,60,100)
+    blurSlider.Text = "15"
+    blurSlider.TextColor3 = Color3.fromRGB(0,200,255)
+    blurSlider.Font = Enum.Font.Gotham
+    blurSlider.TextScaled = true
+    blurSlider.Parent = page
+
+    -- Exemplo: mudar cor do Hub
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Size = UDim2.new(0,170,0,28)
+    colorBtn.Position = UDim2.new(0,10,0,60)
+    colorBtn.BackgroundColor3 = Color3.fromRGB(0,200,255)
+    colorBtn.Text = "Mudar cor do Hub"
+    colorBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    colorBtn.Font = Enum.Font.Gotham
+    colorBtn.TextScaled = true
+    colorBtn.Parent = page
+
+    colorBtn.MouseButton1Click:Connect(function()
+        TweenService:Create(mainFrame, TweenInfo.new(0.5), {BackgroundColor3 = Color3.fromRGB(math.random(20, 100),math.random(50,200),math.random(100,255))}):Play()
+    end)
+
+    pages[3] = page
+end
+
+-- Página 4: Sobre
+do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, -32, 1, -105)
+    page.Position = UDim2.new(0, 16, 0, 88)
+    page.BackgroundTransparency = 1
+    page.Parent = mainFrame
+
+    local info = Instance.new("TextLabel")
+    info.Size = UDim2.new(1, 0, 1, 0)
+    info.Position = UDim2.new(0,0,0,0)
+    info.BackgroundTransparency = 1
+    info.TextColor3 = Color3.fromRGB(0,200,255)
+    info.Font = Enum.Font.Gotham
+    info.TextScaled = true
+    info.TextWrapped = true
+    info.Text = "🌟 Didi Hub Fling v3 🌟\n\nHub feito para Roblox!\n\nPersonalize suas funções e aproveite."
+    info.Parent = page
+
+    pages[4] = page
+end
+
+-- Função de troca de abas
+local function showTab(idx)
+    for i,page in ipairs(pages) do
+        page.Visible = (i == idx)
+        TweenService:Create(tabs[i], TweenInfo.new(0.3), {
+            BackgroundColor3 = (i==idx and Color3.fromRGB(0,200,255) or Color3.fromRGB(30,40,60)),
+            TextColor3 = (i==idx and Color3.fromRGB(255,255,255) or Color3.fromRGB(160,170,188))
+        }):Play()
+    end
+end
+for i,btn in ipairs(tabs) do
+    btn.MouseButton1Click:Connect(function()
+        selectedTab = i
+        showTab(i)
+    end)
+end
+
+-- Inicialização do Hub
+for i,page in ipairs(pages) do page.Visible = (i==1) end
+mainFrame.Visible = false
+mainFrame.BackgroundTransparency = 1
+TweenService:Create(mainFrame, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.08}):Play()
+mainFrame.Visible = true
+
+-- ESC para fechar o Hub
+game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
+    if input.KeyCode == Enum.KeyCode.Escape and not processed then
+        hubGui.Enabled = not hubGui.Enabled
+    end
+end)
